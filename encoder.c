@@ -50,7 +50,7 @@ int main(int argc, char **argv)
                 encoderMode = 0;
                 break;
             case 'i':
-                if((input = fopen(&argv[i][2], "r")) == NULL)
+                if ((input = fopen(&argv[i][2], "r")) == NULL)
                     openFileError(&argv[i][2]);
                 break;
             case 'o':
@@ -74,23 +74,16 @@ int main(int argc, char **argv)
 
     while ((letter = fgetc(input)) != EOF)
     {
-
-        if (letter != '\n')
+        char key = firstCharOfIndex[indexIncrement];
+        if (key == '\0')
         {
-            char key = firstCharOfIndex[indexIncrement];
-            if (key == '\0')
-            {
-                key = *firstCharOfIndex;
-                indexIncrement = 0;
-            }
-            indexIncrement++;
-
-            int offset = key - 48;
-
-            fputc(encodeChar(letter, offset, encoderMode), output);
+            key = *firstCharOfIndex;
+            indexIncrement = 0;
         }
-        else
-            fputc('\n', output);
+        indexIncrement++;
+
+        int offset = key - 48;
+        fputc(encodeChar(letter, offset, encoderMode), output);
     }
 
     if (output != stdout)
