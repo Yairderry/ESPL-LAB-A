@@ -3,7 +3,8 @@
 #include <string.h>
 
 static char encodeChar(char letter, int offset, int isAddition);
-static int getOffset(char c);
+static void invalidParamError(char *param);
+static void openFileError(char *fileName);
 
 int main(int argc, char **argv)
 {
@@ -19,51 +20,49 @@ int main(int argc, char **argv)
     {
 
         char first = argv[i][0];
-        if (first == '+')
+        char second = argv[i][1];
+        switch (first)
         {
-            char second = argv[i][1];
-            if (second == 'D')
-                debug = 1;
-            else if (second == 'e')
+        case '+':
+            switch (second)
             {
+            case 'D':
+                debug = 1;
+                break;
+            case 'e':
                 if (argv[i][2] != '\0')
                     firstCharOfIndex = &argv[i][2];
+                break;
+
+            default:
+                invalidParamError(argv[i]);
             }
-            else
+            break;
+        case '-':
+            switch (second)
             {
-                fprintf(stderr, "Invalid parameter -> %s\n", argv[i]);
-                return 1;
-            }
-        }
-        else if (first == '-')
-        {
-            char second = argv[i][1];
-            if (second == 'D')
+            case 'D':
                 debug = 0;
-            else if (second == 'e')
-            {
+                break;
+            case 'e':
                 if (argv[i][2] != '\0')
                     firstCharOfIndex = &argv[i][2];
                 encoderMode = 0;
+                break;
+            case 'i':
+                if((input = fopen(&argv[i][2], "r")) == NULL)
+                    openFileError(&argv[i][2]);
+                break;
+            case 'o':
+                output = fopen(&argv[i][2], "w");
+                break;
+            default:
+                invalidParamError(argv[i]);
             }
-            else if (second == 'i')
-            {
-                input = fopen(&argv[i][2], "r+");
-            }
-            else if (second == 'o')
-            {
-                output = fopen(&argv[i][2], "w+");
-            }
-            else
-            {
-                fprintf(stderr, "Invalid parameter -> %s\n", argv[i]);
-                return 1;
-            }
-        }
-        else
-        {
-            fprintf(stderr, "Invalid parameter -> %s\n", argv[i]);
-            return 1;
+            break;
+
+        default:
+            invalidParamError(argv[i]);
         }
 
         if (debug)
@@ -86,14 +85,14 @@ int main(int argc, char **argv)
             }
             indexIncrement++;
 
-            int offset = getOffset(key);
+            int offset = key - 48;
 
             fputc(encodeChar(letter, offset, encoderMode), output);
         }
         else
             fputc('\n', output);
     }
-    
+
     if (output != stdout)
         fclose(output);
 
@@ -116,7 +115,14 @@ static char encodeChar(char letter, int offset, int isAddition)
     return letter;
 }
 
-static int getOffset(char c)
+static void invalidParamError(char *param)
 {
-    return c - 48;
+    fprintf(stderr, "Invalid parameter -> %s\n", param);
+    exit(0);
+}
+
+static void openFileError(char *fileName)
+{
+    fprintf(stderr, "Couldn't open file named: %s\n", fileName);
+    exit(0);
 }
